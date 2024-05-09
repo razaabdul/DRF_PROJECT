@@ -93,7 +93,23 @@ class blogview(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self,request,pk=None):
+        b=Blog.objects.get(uuid=pk)
+        try:
+            Blog.objects.get(uuid=pk)
+            
+            # Check if the authenticated user is the author of the comment
+            if request.user == Blog.user:
+                Blog.delete()
+                return Response({"message": "Blog deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+            else:
+                raise ("You do not have permission to delete this comment.")
         
+        except Blog.DoesNotExist:
+            return Response({"error": "Blog not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": "Sorry this Blog is not posted by you !"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class commentview(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes=[JWTAuthentication]
